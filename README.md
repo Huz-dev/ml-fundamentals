@@ -1,145 +1,95 @@
-# Employee Attrition — Supervised ML Benchmark
+# ML Fundamentals
 
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![scikit--learn](https://img.shields.io/badge/scikit--learn-1.3%2B-orange)
-![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-A complete, reproducible classification benchmark comparing **7 supervised learning algorithms** on the IBM HR Analytics Employee Attrition dataset — from raw CSV to a justified final model selection.
-
-> Predicting employee attrition from HR data: preprocessing, 7 trained models, required experiments (KNN K-tuning, tree depth, scaling effects, imbalance analysis), full evaluation, and a documented final recommendation.
+Practical machine learning assignments covering supervised learning, unsupervised learning, and (eventually) production-style ML engineering. Each assignment is self-contained, reproducible, and modular — one script per pipeline stage, with full result tables, plots, and a written justification of every modeling decision.
 
 ---
 
-## Table of Contents
+## Assignments
 
-- [Overview](#overview)
-- [Results at a Glance](#results-at-a-glance)
-- [Key Findings](#key-findings)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Dataset](#dataset)
-- [Models](#models)
-- [Methodology](#methodology)
-- [Outputs](#outputs)
-- [Final Model](#final-model)
-- [License](#license)
+| # | Assignment | Focus | Status |
+|---|---|---|---|
+| 1 | [Supervised ML Benchmark](assignment_1_supervised/) | Classification, preprocessing, 7 core algorithms, evaluation | ✅ Complete |
+| 2 | [Customer Segmentation](assignment_2_clustering/) | KMeans, DBSCAN, PCA, unsupervised analysis | ✅ Complete |
+| 3 | Production-Style ML Service | Pipelines, tuning, FastAPI, Docker, monitoring | 🔜 Planned |
 
 ---
 
-## Overview
+## Assignment 1 — Supervised ML Benchmark
 
-This project builds an end-to-end supervised ML pipeline:
+Predicts employee attrition on the IBM HR Analytics dataset (1,470 employees), training and comparing **7 classification algorithms**: Logistic Regression, KNN, Decision Tree, Random Forest, Gradient Boosting, XGBoost, and SVM.
 
-**Preprocess → Train 7 models → Evaluate → Run required experiments → Select & justify final model**
+**Highlights:**
+- Unscaled SVM completely fails on the minority class (F1 = 0.000) — scaling fixes this (F1 = 0.333), demonstrating why distance-based models need it.
+- Tree-based ensembles hit up to 100% training accuracy but drop sharply on validation — a clear overfitting signal documented alongside an underfitting shallow tree.
+- **Logistic Regression** was selected as the final model: best F1 (0.509) and ROC-AUC (0.832) on the test set, smallest train/validation gap, and fully interpretable coefficients.
 
-Everything is modular (`src/`), reproducible (fixed random seed throughout), and leakage-free (scaler fit only on training data).
+📄 Full write-up: [`assignment_1_supervised/observations.md`](assignment_1_supervised/observations.md)
+📄 Setup & run instructions: [`assignment_1_supervised/README.md`](assignment_1_supervised/README.md)
 
-## Results at a Glance
+---
 
-| Model | Accuracy | Precision | Recall | F1 | ROC-AUC |
-|---|---|---|---|---|---|
-| **Logistic Regression** ⭐ | 0.869 | 0.652 | 0.417 | **0.509** | 0.832 |
-| SVM (scaled) | 0.873 | **1.000** | 0.222 | 0.364 | 0.816 |
-| Gradient Boosting | 0.855 | 0.625 | 0.278 | 0.385 | 0.813 |
-| XGBoost | 0.855 | 0.625 | 0.278 | 0.385 | 0.762 |
-| Random Forest | 0.846 | 0.667 | 0.111 | 0.191 | 0.788 |
-| KNN | 0.846 | 0.625 | 0.139 | 0.227 | 0.636 |
-| Decision Tree | 0.796 | 0.371 | 0.361 | 0.366 | 0.621 |
+## Assignment 2 — Customer Segmentation (KMeans, DBSCAN, PCA)
 
-*(Test set, 221 held-out employees, 16.3% attrition rate)*
+Segments 8,950 credit card customers by behavior (balance, purchases, cash advance, repayment, tenure) using unsupervised clustering, comparing how KMeans and DBSCAN structure the same data very differently.
 
-⭐ **Logistic Regression** was selected as the final model — see [Final Model](#final-model).
+**Highlights:**
+- **KMeans (K=4)** found four balanced, interpretable segments — e.g. active regular spenders vs. high-value cash-advance revolvers.
+- **DBSCAN** told a different story: one dense cluster holding 97% of customers, a few tiny extreme-behavior pockets, and 2.9% flagged as noise — and those noise points turned out to have the *highest* average spending and cash-advance activity of any group, a finding KMeans structurally cannot surface since it force-assigns every point to a cluster.
+- **PCA**: the first 2 components explain 58% of total variance — enough to visualize meaningfully, with the caveat that ~42% of structure isn't shown in the 2D plots.
 
-## Key Findings
+📄 Full write-up: [`assignment_2_clustering/observations.md`](assignment_2_clustering/observations.md)
+📄 Setup & run instructions: [`assignment_2_clustering/README.md`](assignment_2_clustering/README.md)
 
-- 🎯 **Scaling matters — a lot.** Unscaled SVM completely fails on the minority class (F1 = 0.000, silently predicting "No Attrition" for everyone). Scaling the same features gets F1 to 0.333.
-- 📉 **Deep trees overfit visibly.** An unrestricted Decision Tree hits 100% training accuracy but drops 26 points on validation. A depth-2 tree underfits instead — both are documented side by side.
-- ⚖️ **Accuracy is misleading on imbalanced data.** With ~84% "No Attrition," a model can score 84%+ accuracy while catching almost none of the actual at-risk employees — F1 and Recall tell the real story here.
-- 🏆 **Simplicity won.** Logistic Regression outperformed every tree-based ensemble on the test set, with the smallest train/validation gap (best generalization) and the fastest inference time.
+---
 
-## Project Structure
+## Repo structure
 
 ```
-assignment_1_supervised/
-├── data/
-│   └── WA_Fn-UseC_-HR-Employee-Attrition.csv
-├── src/
-│   ├── data_preprocessing.py   # load → clean → encode → split → scale
-│   ├── models.py               # one training function per algorithm
-│   ├── evaluate.py             # metrics, confusion matrices, comparison plots
-│   ├── experiments.py          # required comparisons (KNN K's, tree depth, etc.)
-│   └── main.py                 # runs the full pipeline end-to-end
-├── results/
-│   ├── results_table.xlsx      # every metric + every experiment, one sheet each
-│   ├── confusion_matrices/     # one PNG per model
-│   └── plots/                  # ROC curves, timing, metric comparisons
-├── requirements.txt
-├── observations.md             # full experiment write-up + model justification
-└── README.md
+ml-fundamentals/
+├── assignment_1_supervised/
+│   ├── data/
+│   ├── src/                 # data_preprocessing, models, evaluate, experiments, main
+│   ├── results/              # results_table.xlsx, confusion matrices, plots
+│   ├── README.md
+│   └── observations.md
+│
+├── assignment_2_clustering/
+│   ├── data/
+│   ├── src/                 # data_preprocessing, kmeans_analysis, dbscan_analysis, pca_analysis, main
+│   ├── results/              # cluster_profiles.xlsx, plots
+│   ├── README.md
+│   └── observations.md
+│
+└── README.md                 # you are here
 ```
 
-## Installation
+## Running any assignment
+
+Each assignment has its own virtual environment and dependencies (kept separate so packages never clash between assignments):
 
 ```bash
-git clone <your-repo-url>
-cd assignment_1_supervised
+cd assignment_1_supervised   # or assignment_2_clustering
 python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-> **macOS users:** XGBoost requires the OpenMP runtime. If you hit a `libomp.dylib` error, run `brew install libomp` first.
-
-## Usage
-
-```bash
 cd src
 python main.py
 ```
 
-Runs the full pipeline in one command — preprocessing, training all 7 models, evaluation, plots, required experiments, and the Excel results file. Takes under a minute. Outputs land in `results/`.
+Each `main.py` runs its entire pipeline end-to-end and writes all results (Excel tables + plots) into that assignment's `results/` folder. See each assignment's own README for details specific to that pipeline.
 
-## Dataset
+> **macOS + XGBoost note (Assignment 1 only):** if you hit a `libomp.dylib` load error, run `brew install libomp` once, then re-run.
 
-**IBM HR Analytics Employee Attrition** — 1,470 employees, 35 original columns, target `Attrition` (Yes/No).
+## Common design principles across assignments
 
-- 4 constant/identifier columns dropped (`EmployeeCount`, `StandardHours`, `Over18`, `EmployeeNumber`)
-- No missing values, no duplicates
-- Imbalanced target: 16.1% Yes / 83.9% No
-- Mixed numerical (Age, MonthlyIncome, DistanceFromHome...) and categorical (Department, JobRole, OverTime...) features
-
-## Models
-
-Logistic Regression · KNN · Decision Tree · Random Forest · Gradient Boosting · XGBoost · SVM
-
-Distance/margin-based models (Logistic Regression, KNN, SVM) train on **scaled** features; tree-based models train on **unscaled** (one-hot only) features, since tree splits are scale-invariant.
-
-## Methodology
-
-- **Split:** 70% train / 15% validation / 15% test, stratified on target to preserve the imbalance ratio in every split
-- **Encoding:** one-hot encoding for categoricals (max cardinality: 9) — chosen over target encoding to avoid leakage risk on a small dataset and to keep Logistic Regression coefficients interpretable
-- **Scaling:** `StandardScaler` fit only on training data, applied to val/test — no leakage
-- **Required experiments:** KNN K-value comparison, shallow vs. deep Decision Tree, Decision Tree vs. Random Forest, Random Forest vs. XGBoost, SVM with vs. without scaling, class imbalance analysis
-
-Full reasoning and all experiment tables: [`observations.md`](observations.md)
-
-## Outputs
-
-- `results/results_table.xlsx` — 10 sheets: train/val/test metrics, bias-variance diagnosis, all 6 experiments
-- `results/confusion_matrices/*.png` — per-model confusion matrices
-- `results/plots/` — ROC curves, training/inference timing, metric comparison bar charts
-
-## Final Model
-
-**Logistic Regression**, selected for:
-- Best F1-score (0.509) and second-best ROC-AUC (0.832) on the held-out test set
-- Smallest train/validation gap of any model — genuine generalization, not memorization
-- Fully interpretable coefficients — meaningful for HR stakeholders who need to understand *why* someone is flagged
-- Fastest inference (~0.005ms/sample)
-
-Full justification and answers to every required observation question: [`observations.md`](observations.md)
+- **Modular pipelines** — one script per stage (preprocessing, modeling, evaluation, experiments/analysis), orchestrated by a single `main.py`.
+- **Reproducibility** — a fixed random seed throughout every pipeline.
+- **No data leakage** — scalers and encoders are always fit on training data only, then applied to validation/test.
+- **Documented reasoning, not just code** — every assignment ships an `observations.md` explaining *why* decisions were made (feature selection, final model/parameter choice) and what the results actually mean, not just what number came out.
 
 ## License
 
