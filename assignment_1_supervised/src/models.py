@@ -1,14 +1,3 @@
-"""
-models.py
-
-One training function per algorithm. Every function:
-  - takes X_train, y_train (+ any hyperparameters)
-  - fits the model
-  - times the training
-  - returns (fitted_model, training_time_seconds)
-
-Keeping this consistent makes evaluate.py and experiments.py simple to write.
-"""
 
 import time
 from sklearn.linear_model import LogisticRegression

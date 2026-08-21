@@ -1,19 +1,3 @@
-"""
-experiments.py
-
-Implements every REQUIRED experiment from the assignment guide:
-  - Compare 2+ values of K for KNN
-  - Compare shallow vs deep Decision Tree
-  - Compare Decision Tree vs Random Forest
-  - Compare Random Forest vs a boosting model
-  - Compare SVM with vs without feature scaling
-  - Show one model that underfits and one that overfits
-  - Explain effect of class imbalance
-
-Each function returns a small results dict/DataFrame so main.py can log
-everything into observations.md / results files.
-"""
-
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 

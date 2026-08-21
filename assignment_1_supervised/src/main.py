@@ -1,18 +1,3 @@
-"""
-main.py
-
-Orchestrates the entire Assignment 1 pipeline end to end:
-  1. Preprocess data
-  2. Train all 7 required models on the full training set
-  3. Evaluate every model on train / val / test
-  4. Save results table (Excel), confusion matrices, ROC curves,
-     timing plots, and metric comparison plots
-  5. Run all required experiments (KNN K's, tree depth, SVM scaling, etc.)
-  6. Save experiment results into the same Excel workbook (separate sheets)
-
-Run with:  python main.py
-"""
-
 import os
 import pandas as pd
 
@@ -199,7 +184,6 @@ def main():
         test_df.round(4).to_excel(writer, sheet_name="test_results", index=False)
         bias_variance_df.round(4).to_excel(writer, sheet_name="bias_variance", index=False)
         for exp_name, exp_df in experiment_results.items():
-            # Excel sheet names max 31 chars
             sheet_name = exp_name[:31]
             exp_df.round(4).to_excel(writer, sheet_name=sheet_name, index=False)
     print(f"Saved: {EXCEL_PATH}")

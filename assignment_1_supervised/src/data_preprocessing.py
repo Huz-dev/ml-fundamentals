@@ -1,13 +1,3 @@
-"""
-data_preprocessing.py
-
-Handles everything related to loading, inspecting, cleaning, encoding,
-scaling, and splitting the IBM HR Employee Attrition dataset.
-
-Design choice: every step is a separate function so preprocessing decisions
-are traceable and reproducible (per assignment requirement).
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -79,14 +69,6 @@ def get_feature_types(df: pd.DataFrame) -> tuple[list, list]:
 
 
 def encode_categorical(df: pd.DataFrame, categorical_cols: list) -> tuple[pd.DataFrame, dict]:
-    """
-    One-hot encode categorical features (nominal, no ordinal relationship
-    e.g. Department, JobRole, MaritalStatus, Gender, OverTime, BusinessTravel,
-    EducationField). One-hot is chosen over label encoding because none of
-    these categories have a natural order, and models like Logistic
-    Regression / KNN / SVM would misinterpret arbitrary integer labels as
-    ordinal relationships.
-    """
     df = df.copy()
     df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
     encoding_info = {"method": "one-hot", "columns_encoded": categorical_cols}
